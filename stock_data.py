@@ -167,14 +167,23 @@ class StockDataFetcher:
             logger.info(f"📡 Fetching data for {ticker}...")
             stock = yf.Ticker(ticker)
             info = stock.info
+            fast = stock.fast_info
             
             # Safely extract data with type conversion
             data = {
                 "ticker": ticker,
                 "company": self._safe_get(info, "longName", info.get("shortName", ticker)),
-                "current_price": self._safe_float(info.get("currentPrice"), 100.0),
-                "change_pct": self._safe_float(info.get("regularMarketChangePercent"), 0.0),
-                "market_cap": self._safe_float(info.get("marketCap"), 1_000_000_000),
+                "current_price": self._safe_float(
+                    fast.get("lastPrice") or info.get("currentPrice")
+                ),
+
+                "market_cap": self._safe_float(
+                    fast.get("marketCap") or info.get("marketCap")
+                ),
+
+                "change_pct": self._safe_float(
+                    info.get("regularMarketChangePercent")
+                ),
                 "pe_ratio": self._safe_float(info.get("trailingPE"), 25.0),
                 "high_52": self._safe_float(info.get("fiftyTwoWeekHigh"), 120.0),
                 "low_52": self._safe_float(info.get("fiftyTwoWeekLow"), 80.0),
